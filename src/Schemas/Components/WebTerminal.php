@@ -1,0 +1,710 @@
+<?php
+
+namespace MWGuerra\WebTerminal\Schemas\Components;
+
+use Closure;
+use Filament\Schemas\Components\Livewire;
+use MWGuerra\WebTerminal\Data\ConnectionConfig;
+use MWGuerra\WebTerminal\Enums\ConnectionType;
+use MWGuerra\WebTerminal\Livewire\WebTerminal as WebTerminalComponent;
+
+/**
+ * Web Terminal component for use in Filament schemas/forms.
+ *
+ * This component embeds the terminal into any Filament form or page using fluent API.
+ * Extends Filament's built-in Livewire component for proper component isolation.
+ *
+ * @example
+ * WebTerminal::make()
+ *     ->local()
+ *     ->allowedCommands(['ls', 'pwd', 'cd'])
+ *     ->height('400px')
+ *     ->prompt('$ ')
+ */
+class WebTerminal extends Livewire
+{
+    protected string|Closure $height = '350px';
+
+    protected array|Closure $connectionConfig = ['type' => 'local'];
+
+    protected array|Closure $allowedCommands = [];
+
+    protected int|Closure $timeout = 10;
+
+    protected string|Closure $prompt = '$ ';
+
+    protected int|Closure $historyLimit = 50;
+
+    protected int|Closure $maxOutputLines = 1000;
+
+    protected ?string $workingDirectory = null;
+
+    protected bool|Closure $allowAll = false;
+
+    protected array|Closure $environment = [];
+
+    protected bool|Closure $useLoginShell = false;
+
+    protected string|Closure $shell = '/bin/bash';
+
+    protected bool|Closure $startConnected = false;
+
+    protected string|Closure $title = 'Terminal';
+
+    protected bool|Closure $showWindowControls = true;
+
+    // Logging configuration
+    protected bool|Closure|null $loggingEnabled = null;
+
+    protected bool|Closure|null $logConnections = null;
+
+    protected bool|Closure|null $logCommands = null;
+
+    protected bool|Closure|null $logOutput = null;
+
+    protected string|Closure|null $logIdentifier = null;
+
+    public static function make(Closure|string $component = null, Closure|array $data = []): static
+    {
+        $static = app(static::class, [
+            'component' => $component ?? WebTerminalComponent::class,
+            'data' => $data,
+        ]);
+        $static->configure();
+        $static->key('web-terminal');
+
+        return $static;
+    }
+
+    /**
+     * Get the properties to pass to the Livewire component.
+     *
+     * @return array<string, mixed>
+     */
+    public function getComponentProperties(): array
+    {
+        $config = $this->getConnectionConfig();
+
+        // Add working directory if set
+        if ($this->workingDirectory !== null) {
+            $config['working_directory'] = $this->workingDirectory;
+        }
+
+        return [
+            ...parent::getComponentProperties(),
+            'connection' => $config,
+            'allowedCommands' => $this->getAllowedCommands(),
+            'allowAllCommands' => $this->getAllowAll(),
+            'environment' => $this->getEnvironment(),
+            'useLoginShell' => $this->getUseLoginShell(),
+            'shell' => $this->getShell(),
+            'timeout' => $this->getTimeout(),
+            'prompt' => $this->getPrompt(),
+            'historyLimit' => $this->getHistoryLimit(),
+            'maxOutputLines' => $this->getMaxOutputLines(),
+            'height' => $this->getHeight(),
+            'startConnected' => $this->getStartConnected(),
+            'title' => $this->getTitle(),
+            'showWindowControls' => $this->getShowWindowControls(),
+            'loggingEnabled' => $this->getLoggingEnabled(),
+            'logConnections' => $this->getLogConnections(),
+            'logCommands' => $this->getLogCommands(),
+            'logOutput' => $this->getLogOutput(),
+            'logIdentifier' => $this->getLogIdentifier(),
+        ];
+    }
+
+    // ========================================
+    // Height Configuration
+    // ========================================
+
+    /**
+     * Set the height of the terminal.
+     */
+    public function height(string|Closure $height): static
+    {
+        $this->height = $height;
+
+        return $this;
+    }
+
+    /**
+     * Get the height of the terminal.
+     */
+    public function getHeight(): string
+    {
+        return $this->evaluate($this->height);
+    }
+
+    // ========================================
+    // Connection Configuration
+    // ========================================
+
+    /**
+     * Set the connection configuration.
+     */
+    public function connection(array|Closure|ConnectionConfig $config): static
+    {
+        if ($config instanceof ConnectionConfig) {
+            $this->connectionConfig = [
+                'type' => $config->type->value,
+                'host' => $config->host,
+                'username' => $config->username,
+                'password' => $config->password,
+                'private_key' => $config->privateKey,
+                'passphrase' => $config->passphrase,
+                'api_token' => $config->apiToken,
+                'port' => $config->port,
+                'timeout' => $config->timeout,
+                'working_directory' => $config->workingDirectory,
+                'environment' => $config->environment,
+            ];
+        } else {
+            $this->connectionConfig = $config;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Configure for local connection.
+     */
+    public function local(): static
+    {
+        $this->connectionConfig = ['type' => 'local'];
+
+        return $this;
+    }
+
+    /**
+     * Configure for SSH connection.
+     *
+     * Supports both password and key-based authentication:
+     * - Password auth: provide `password` parameter
+     * - Key auth: provide `key` parameter with the private key content
+     *
+     * The `key` parameter accepts the private key content directly. You can load it from:
+     * - File: `key: file_get_contents('/path/to/key')`
+     * - Environment: `key: env('SSH_PRIVATE_KEY')`
+     * - Storage: `key: Storage::get('ssh/key')`
+     *
+     * @param  string  $host  SSH host
+     * @param  string  $username  SSH username
+     * @param  string|null  $password  Password for password-based auth
+     * @param  string|null  $key  Private key content for key-based auth
+     * @param  string|null  $passphrase  Passphrase for encrypted private keys
+     * @param  int  $port  SSH port (default: 22)
+     */
+    public function ssh(
+        string $host,
+        string $username,
+        ?string $password = null,
+        ?string $key = null,
+        ?string $passphrase = null,
+        int $port = 22
+    ): static {
+        $this->connectionConfig = [
+            'type' => 'ssh',
+            'host' => $host,
+            'username' => $username,
+            'password' => $password,
+            'private_key' => $key,
+            'passphrase' => $passphrase,
+            'port' => $port,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Get the connection configuration.
+     */
+    public function getConnectionConfig(): array
+    {
+        return $this->evaluate($this->connectionConfig);
+    }
+
+    // ========================================
+    // Command Configuration
+    // ========================================
+
+    /**
+     * Set the allowed commands.
+     */
+    public function allowedCommands(array|Closure $commands): static
+    {
+        $this->allowedCommands = $commands;
+
+        return $this;
+    }
+
+    /**
+     * Get the allowed commands.
+     */
+    public function getAllowedCommands(): array
+    {
+        return $this->evaluate($this->allowedCommands);
+    }
+
+    /**
+     * Allow all commands (bypass whitelist).
+     *
+     * WARNING: This allows any command to be executed. Use with caution.
+     * Only use this for development/testing purposes or in trusted environments.
+     */
+    public function allowAllCommands(bool|Closure $allowAll = true): static
+    {
+        $this->allowAll = $allowAll;
+
+        return $this;
+    }
+
+    /**
+     * Get whether all commands are allowed.
+     */
+    public function getAllowAll(): bool
+    {
+        return $this->evaluate($this->allowAll);
+    }
+
+    // ========================================
+    // Environment Configuration
+    // ========================================
+
+    /**
+     * Set environment variables for command execution.
+     *
+     * @param  array<string, string>|Closure  $environment  Environment variables
+     */
+    public function environment(array|Closure $environment): static
+    {
+        $this->environment = $environment;
+
+        return $this;
+    }
+
+    /**
+     * Get the environment variables.
+     *
+     * @return array<string, string>
+     */
+    public function getEnvironment(): array
+    {
+        return $this->evaluate($this->environment);
+    }
+
+    /**
+     * Set the PATH environment variable.
+     *
+     * This is useful for making commands like node, composer, etc. available
+     * when they are installed in non-standard locations (NVM, homebrew, etc.).
+     */
+    public function path(string|Closure $path): static
+    {
+        $currentEnv = $this->evaluate($this->environment);
+        $currentEnv['PATH'] = $this->evaluate($path);
+        $this->environment = $currentEnv;
+
+        return $this;
+    }
+
+    /**
+     * Inherit PATH from the current shell environment.
+     *
+     * This reads the PATH from the server's environment and uses it.
+     * Note: This may not include user-specific paths from .bashrc/.zshrc.
+     */
+    public function inheritPath(): static
+    {
+        $currentEnv = $this->evaluate($this->environment);
+        $currentEnv['PATH'] = getenv('PATH') ?: '/usr/local/bin:/usr/bin:/bin';
+        $this->environment = $currentEnv;
+
+        return $this;
+    }
+
+    // ========================================
+    // Shell Configuration
+    // ========================================
+
+    /**
+     * Enable login shell mode.
+     *
+     * When enabled, commands are wrapped with `bash -l -i -c` which loads
+     * .bashrc/.bash_profile and initializes the full user environment
+     * (including NVM, rbenv, pyenv, homebrew, etc.).
+     *
+     * This is the recommended way to get a "real terminal" experience
+     * where all your shell customizations are available.
+     */
+    public function loginShell(bool|Closure $useLoginShell = true): static
+    {
+        $this->useLoginShell = $useLoginShell;
+
+        return $this;
+    }
+
+    /**
+     * Get whether login shell mode is enabled.
+     */
+    public function getUseLoginShell(): bool
+    {
+        return $this->evaluate($this->useLoginShell);
+    }
+
+    /**
+     * Set the shell to use for command execution.
+     *
+     * @param  string|Closure  $shell  Path to shell (e.g., /bin/bash, /bin/zsh)
+     */
+    public function shell(string|Closure $shell): static
+    {
+        $this->shell = $shell;
+
+        return $this;
+    }
+
+    /**
+     * Get the shell path.
+     */
+    public function getShell(): string
+    {
+        return $this->evaluate($this->shell);
+    }
+
+    // ========================================
+    // Terminal Settings
+    // ========================================
+
+    /**
+     * Set the command timeout in seconds.
+     */
+    public function timeout(int|Closure $seconds): static
+    {
+        $this->timeout = $seconds;
+
+        return $this;
+    }
+
+    /**
+     * Get the timeout.
+     */
+    public function getTimeout(): int
+    {
+        return $this->evaluate($this->timeout);
+    }
+
+    /**
+     * Set the terminal prompt.
+     */
+    public function prompt(string|Closure $prompt): static
+    {
+        $this->prompt = $prompt;
+
+        return $this;
+    }
+
+    /**
+     * Get the prompt.
+     */
+    public function getPrompt(): string
+    {
+        return $this->evaluate($this->prompt);
+    }
+
+    /**
+     * Set the command history limit.
+     */
+    public function historyLimit(int|Closure $limit): static
+    {
+        $this->historyLimit = $limit;
+
+        return $this;
+    }
+
+    /**
+     * Get the history limit.
+     */
+    public function getHistoryLimit(): int
+    {
+        return $this->evaluate($this->historyLimit);
+    }
+
+    /**
+     * Set the maximum output lines to retain.
+     */
+    public function maxOutputLines(int|Closure $lines): static
+    {
+        $this->maxOutputLines = $lines;
+
+        return $this;
+    }
+
+    /**
+     * Get the max output lines.
+     */
+    public function getMaxOutputLines(): int
+    {
+        return $this->evaluate($this->maxOutputLines);
+    }
+
+    /**
+     * Set the initial working directory.
+     */
+    public function workingDirectory(?string $directory): static
+    {
+        $this->workingDirectory = $directory;
+
+        return $this;
+    }
+
+    /**
+     * Get the working directory.
+     */
+    public function getWorkingDirectory(): ?string
+    {
+        return $this->workingDirectory;
+    }
+
+    // ========================================
+    // Preset Configurations
+    // ========================================
+
+    /**
+     * Configure as a read-only terminal (only allows ls, pwd, cat, head, tail).
+     */
+    public function readOnly(): static
+    {
+        return $this->allowedCommands(['ls', 'pwd', 'cat', 'head', 'tail', 'find', 'grep']);
+    }
+
+    /**
+     * Configure for file browsing (ls, pwd, cd, cat).
+     */
+    public function fileBrowser(): static
+    {
+        return $this->allowedCommands(['ls', 'pwd', 'cd', 'cat', 'head', 'tail', 'find']);
+    }
+
+    /**
+     * Configure for git operations.
+     */
+    public function gitTerminal(): static
+    {
+        return $this->allowedCommands(['git', 'ls', 'pwd', 'cd', 'cat']);
+    }
+
+    /**
+     * Configure for Docker operations.
+     */
+    public function dockerTerminal(): static
+    {
+        return $this->allowedCommands(['docker', 'docker-compose', 'ls', 'pwd', 'cd']);
+    }
+
+    /**
+     * Configure for npm/node operations.
+     */
+    public function nodeTerminal(): static
+    {
+        return $this->allowedCommands(['npm', 'npx', 'node', 'yarn', 'ls', 'pwd', 'cd', 'cat']);
+    }
+
+    /**
+     * Configure for artisan commands.
+     */
+    public function artisanTerminal(): static
+    {
+        return $this->allowedCommands(['php', 'composer', 'ls', 'pwd', 'cd', 'cat']);
+    }
+
+    // ========================================
+    // UI Configuration
+    // ========================================
+
+    /**
+     * Start the terminal already connected.
+     *
+     * When enabled, the terminal will automatically connect on load
+     * instead of requiring the user to click the Connect button.
+     */
+    public function startConnected(bool|Closure $startConnected = true): static
+    {
+        $this->startConnected = $startConnected;
+
+        return $this;
+    }
+
+    /**
+     * Get whether to start connected.
+     */
+    public function getStartConnected(): bool
+    {
+        return $this->evaluate($this->startConnected);
+    }
+
+    /**
+     * Set the terminal title shown in the header bar.
+     *
+     * @param  string|Closure  $title  The title to display (default: "Terminal")
+     */
+    public function title(string|Closure $title): static
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    /**
+     * Get the terminal title.
+     */
+    public function getTitle(): string
+    {
+        return $this->evaluate($this->title);
+    }
+
+    /**
+     * Show or hide the window control buttons (the three colored dots).
+     *
+     * @param  bool|Closure  $show  Whether to show the window controls (default: true)
+     */
+    public function windowControls(bool|Closure $show = true): static
+    {
+        $this->showWindowControls = $show;
+
+        return $this;
+    }
+
+    /**
+     * Get whether to show window controls.
+     */
+    public function getShowWindowControls(): bool
+    {
+        return $this->evaluate($this->showWindowControls);
+    }
+
+    // ========================================
+    // Logging Configuration
+    // ========================================
+
+    /**
+     * Configure logging for this terminal.
+     *
+     * All parameters have sensible defaults from config. When not specified,
+     * values from config/web-terminal.php are used.
+     *
+     * @param  bool|Closure|null  $enabled  Enable/disable logging for this terminal
+     * @param  bool|Closure|null  $connections  Log connection/disconnection events
+     * @param  bool|Closure|null  $commands  Log command executions
+     * @param  bool|Closure|null  $output  Log command output (can be verbose)
+     * @param  string|Closure|null  $identifier  Custom identifier for filtering logs
+     */
+    public function log(
+        bool|Closure|null $enabled = true,
+        bool|Closure|null $connections = null,
+        bool|Closure|null $commands = null,
+        bool|Closure|null $output = null,
+        string|Closure|null $identifier = null,
+    ): static {
+        $this->loggingEnabled = $enabled;
+
+        if ($connections !== null) {
+            $this->logConnections = $connections;
+        }
+
+        if ($commands !== null) {
+            $this->logCommands = $commands;
+        }
+
+        if ($output !== null) {
+            $this->logOutput = $output;
+        }
+
+        if ($identifier !== null) {
+            $this->logIdentifier = $identifier;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get whether logging is enabled.
+     *
+     * Returns null if not explicitly set (uses config default).
+     */
+    public function getLoggingEnabled(): ?bool
+    {
+        $value = $this->loggingEnabled;
+
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->evaluate($value);
+    }
+
+    /**
+     * Get whether to log connections.
+     *
+     * Returns null if not explicitly set (uses config default).
+     */
+    public function getLogConnections(): ?bool
+    {
+        $value = $this->logConnections;
+
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->evaluate($value);
+    }
+
+    /**
+     * Get whether to log commands.
+     *
+     * Returns null if not explicitly set (uses config default).
+     */
+    public function getLogCommands(): ?bool
+    {
+        $value = $this->logCommands;
+
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->evaluate($value);
+    }
+
+    /**
+     * Get whether to log output.
+     *
+     * Returns null if not explicitly set (uses config default).
+     */
+    public function getLogOutput(): ?bool
+    {
+        $value = $this->logOutput;
+
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->evaluate($value);
+    }
+
+    /**
+     * Get the log identifier.
+     */
+    public function getLogIdentifier(): ?string
+    {
+        $value = $this->logIdentifier;
+
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->evaluate($value);
+    }
+}
+
+// Backward compatibility alias
+class_alias(WebTerminal::class, 'MWGuerra\\WebTerminal\\Schemas\\Components\\WebTerminalEmbed');

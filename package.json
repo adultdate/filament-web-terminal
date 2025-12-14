@@ -1,0 +1,10 @@
+{
+    "private": true,
+    "scripts": {
+        "build": "npx @tailwindcss/cli -i resources/css/index.css -o resources/dist/web-terminal.css --minify"
+    },
+    "devDependencies": {
+        "@tailwindcss/cli": "^4.1.0",
+        "tailwindcss": "^4.1.0"
+    }
+}
