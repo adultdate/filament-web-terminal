@@ -644,7 +644,7 @@ class WebTerminal extends Livewire
      *     'metadata' => ['user_id' => auth()->id()],
      * ])
      *
-     * @param  array|Closure|bool|null  $config  Array/Closure config, or enabled boolean when using named params
+     * @param  array|Closure|bool|null  $enabled  Array/Closure config, or enabled boolean when using named params
      * @param  bool|Closure|null  $connections  Log connection/disconnection events
      * @param  bool|Closure|null  $commands  Log command executions
      * @param  bool|Closure|null  $output  Log command output (can be verbose)
@@ -652,18 +652,18 @@ class WebTerminal extends Livewire
      * @param  array|Closure|null  $metadata  Custom metadata for all log entries
      */
     public function log(
-        array|Closure|bool|null $config = true,
+        array|Closure|bool|null $enabled = true,
         bool|Closure|null $connections = null,
         bool|Closure|null $commands = null,
         bool|Closure|null $output = null,
         string|Closure|null $identifier = null,
         array|Closure|null $metadata = null,
     ): static {
-        // If config is array or Closure, extract values from it
-        if (is_array($config) || $config instanceof Closure) {
-            if ($config instanceof Closure) {
+        // If enabled is array or Closure, extract values from it
+        if (is_array($enabled) || $enabled instanceof Closure) {
+            if ($enabled instanceof Closure) {
                 // Store closure to be evaluated later - wrap individual values
-                $configClosure = $config;
+                $configClosure = $enabled;
                 $this->loggingEnabled = fn () => $this->evaluate($configClosure)['enabled'] ?? true;
                 $this->logConnections = fn () => $this->evaluate($configClosure)['connections'] ?? null;
                 $this->logCommands = fn () => $this->evaluate($configClosure)['commands'] ?? null;
@@ -672,19 +672,19 @@ class WebTerminal extends Livewire
                 $this->logMetadata = fn () => $this->evaluate($configClosure)['metadata'] ?? [];
             } else {
                 // Array config
-                $this->loggingEnabled = $config['enabled'] ?? true;
-                $this->logConnections = $config['connections'] ?? null;
-                $this->logCommands = $config['commands'] ?? null;
-                $this->logOutput = $config['output'] ?? null;
-                $this->logIdentifier = $config['identifier'] ?? null;
-                $this->logMetadata = $config['metadata'] ?? [];
+                $this->loggingEnabled = $enabled['enabled'] ?? true;
+                $this->logConnections = $enabled['connections'] ?? null;
+                $this->logCommands = $enabled['commands'] ?? null;
+                $this->logOutput = $enabled['output'] ?? null;
+                $this->logIdentifier = $enabled['identifier'] ?? null;
+                $this->logMetadata = $enabled['metadata'] ?? [];
             }
 
             return $this;
         }
 
-        // Named parameters style (config is the enabled boolean)
-        $this->loggingEnabled = $config;
+        // Named parameters style
+        $this->loggingEnabled = $enabled;
 
         if ($connections !== null) {
             $this->logConnections = $connections;
