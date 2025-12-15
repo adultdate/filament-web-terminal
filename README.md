@@ -37,7 +37,7 @@ The installer will:
 #### Install Options
 
 ```bash
-# Standard installation
+# Standard installation (interactive)
 php artisan terminal:install
 
 # Multi-tenant installation (adds tenant_id column)
@@ -49,6 +49,39 @@ php artisan terminal:install --no-tenant
 # Force overwrite existing files
 php artisan terminal:install --force
 ```
+
+#### Non-Interactive Installation
+
+Use `--no-interaction` (or `-n`) with specific flags to skip prompts:
+
+```bash
+# Install only config file
+php artisan terminal:install --config -n
+
+# Install only migration
+php artisan terminal:install --migration -n
+
+# Install config, migration, and run migrate
+php artisan terminal:install --config --migration --migrate -n
+
+# Install page only (requires --panel for multi-panel apps)
+php artisan terminal:install --page --panel=admin -n
+
+# Install everything non-interactively
+php artisan terminal:install --config --migration --views --page --resource --migrate --panel=admin -n
+```
+
+| Flag | Description |
+|------|-------------|
+| `--config` | Publish the configuration file |
+| `--migration` | Publish the database migration |
+| `--views` | Publish Blade views for customization |
+| `--migrate` | Run migration after publishing |
+| `--page` | Generate a custom Terminal page |
+| `--resource` | Generate a custom TerminalLogs resource |
+| `--panel=` | Specify the Filament panel (required for page/resource in multi-panel apps) |
+
+**Note:** When using `-n` without any flags, the installer defaults to `--config --migration`.
 
 #### Generate Custom Pages
 

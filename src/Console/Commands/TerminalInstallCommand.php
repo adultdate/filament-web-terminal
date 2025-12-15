@@ -24,6 +24,10 @@ class TerminalInstallCommand extends Command
      * The name and signature of the console command.
      */
     protected $signature = 'terminal:install
+                            {--config : Publish the configuration file}
+                            {--migration : Publish the database migration}
+                            {--views : Publish Blade views for customization}
+                            {--migrate : Run migration after publishing}
                             {--with-tenant : Include tenant_id column in migration}
                             {--no-tenant : Use standard migration without tenant support}
                             {--force : Overwrite existing files}
@@ -148,13 +152,11 @@ class TerminalInstallCommand extends Command
         }
 
         // Interactive prompt
-        return select(
+        return confirm(
             label: 'Is this a multi-tenant application?',
-            options: [
-                false => 'No - Standard installation',
-                true => 'Yes - Add tenant_id column to logs',
-            ],
             default: false,
+            yes: 'Yes - Add tenant_id column to logs',
+            no: 'No - Standard installation',
         );
     }
 
@@ -163,7 +165,42 @@ class TerminalInstallCommand extends Command
      */
     protected function askWhatToInstall(): array
     {
-        // Build default based on command options
+        // Check if any specific install flags are provided
+        $hasInstallFlags = $this->option('config')
+            || $this->option('migration')
+            || $this->option('views')
+            || $this->option('page')
+            || $this->option('resource');
+
+        // In non-interactive mode with flags, only install what's specified
+        if ($this->option('no-interaction') && $hasInstallFlags) {
+            $toInstall = [];
+
+            if ($this->option('config')) {
+                $toInstall[] = 'config';
+            }
+            if ($this->option('migration')) {
+                $toInstall[] = 'migration';
+            }
+            if ($this->option('views')) {
+                $toInstall[] = 'views';
+            }
+            if ($this->option('page')) {
+                $toInstall[] = 'page';
+            }
+            if ($this->option('resource')) {
+                $toInstall[] = 'resource';
+            }
+
+            return $toInstall;
+        }
+
+        // In non-interactive mode without flags, install defaults (config + migration)
+        if ($this->option('no-interaction')) {
+            return ['config', 'migration'];
+        }
+
+        // Build defaults for interactive mode based on command options
         $default = ['config', 'migration'];
 
         if ($this->option('page')) {
@@ -172,10 +209,6 @@ class TerminalInstallCommand extends Command
 
         if ($this->option('resource')) {
             $default[] = 'resource';
-        }
-
-        if ($this->option('no-interaction')) {
-            return $default;
         }
 
         return multiselect(
@@ -554,16 +587,24 @@ class TerminalInstallCommand extends Command
      */
     protected function handleMigration(): void
     {
-        if ($this->option('no-interaction')) {
+        // If --migrate flag is provided, run migration without asking
+        if ($this->option('migrate')) {
+            $this->call('migrate');
+            info('Migration completed successfully');
+
             return;
         }
 
-        $runMigration = select(
+        // In non-interactive mode without --migrate, skip
+        if ($this->option('no-interaction')) {
+            note('Run `php artisan migrate` when ready.');
+
+            return;
+        }
+
+        // Interactive prompt
+        $runMigration = confirm(
             label: 'Run database migration now?',
-            options: [
-                true => 'Yes',
-                false => 'No - I\'ll run it manually',
-            ],
             default: true,
         );
 
