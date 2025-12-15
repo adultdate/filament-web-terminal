@@ -187,6 +187,8 @@ return [
         'ip_address' => 'Endereço IP',
         'user_agent' => 'User Agent',
         'metadata' => 'Metadados',
+        'metadata_key' => 'Chave',
+        'metadata_value' => 'Valor',
     ],
 
     /*

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MWGuerra\WebTerminal\Filament\Resources\TerminalLogResource\Schemas;
 
+use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -161,10 +162,10 @@ class TerminalLogInfolist
                     ->visible(fn ($record): bool => ! empty($record->metadata))
                     ->collapsed()
                     ->schema([
-                        TextEntry::make('metadata')
+                        KeyValueEntry::make('metadata')
                             ->label('')
-                            ->fontFamily('mono')
-                            ->formatStateUsing(fn ($state): string => json_encode($state, JSON_PRETTY_PRINT)),
+                            ->keyLabel(__('web-terminal::terminal.infolist.metadata_key'))
+                            ->valueLabel(__('web-terminal::terminal.infolist.metadata_value')),
                     ]),
             ]);
     }
