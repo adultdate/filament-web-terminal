@@ -10,8 +10,8 @@
         cooldownProgress: 0,
         cooldownAnimationFrame: null,
         cooldownStartTime: null,
-        disconnectOnNavigate: {{ $disconnectOnNavigate ? 'true' : 'false' }},
-        inactivityTimeout: {{ $inactivityTimeout }},
+        disconnectOnNavigate: {{ ($disconnectOnNavigate ?? true) ? 'true' : 'false' }},
+        inactivityTimeout: {{ $inactivityTimeout ?? 3600 }},
         lastActivityTime: Date.now(),
         inactivityCheckInterval: null,
         init() {

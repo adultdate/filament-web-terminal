@@ -196,16 +196,18 @@ class WebTerminal extends Component
 
     /**
      * Whether to disconnect when user navigates away or refreshes the page.
+     * Nullable to allow Livewire property binding; defaults applied in mount().
      */
     #[Locked]
-    public bool $disconnectOnNavigate = true;
+    public ?bool $disconnectOnNavigate = null;
 
     /**
      * Inactivity timeout in seconds (0 = disabled).
      * Terminal will auto-disconnect after this period of inactivity.
+     * Nullable to allow Livewire property binding; defaults applied in mount().
      */
     #[Locked]
-    public int $inactivityTimeout = 3600;
+    public ?int $inactivityTimeout = null;
 
     // ========================================
     // Logging Configuration

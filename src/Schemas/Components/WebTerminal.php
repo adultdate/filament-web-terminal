@@ -97,7 +97,8 @@ class WebTerminal extends Livewire
             $config['working_directory'] = $this->workingDirectory;
         }
 
-        return [
+        // Filter out null values to let Livewire component use its defaults
+        return array_filter([
             ...parent::getComponentProperties(),
             'connection' => $config,
             'allowedCommands' => $this->getAllowedCommands(),
@@ -121,7 +122,7 @@ class WebTerminal extends Livewire
             'logMetadata' => $this->getLogMetadata(),
             'disconnectOnNavigate' => $this->getDisconnectOnNavigate(),
             'inactivityTimeout' => $this->getInactivityTimeout(),
-        ];
+        ], fn ($value) => $value !== null);
     }
 
     // ========================================
