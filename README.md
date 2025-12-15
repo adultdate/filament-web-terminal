@@ -110,7 +110,7 @@ The generated files are placed in directories configured in your panel provider 
 | ListTerminalLogs | `app/Filament/Resources/TerminalLogResource/Pages/ListTerminalLogs.php` |
 | ViewTerminalLog | `app/Filament/Resources/TerminalLogResource/Pages/ViewTerminalLog.php` |
 
-**Note:** When using custom generated pages with the plugin, disable the corresponding plugin defaults:
+> **Important:** When using custom generated pages with the plugin, you **must** disable the corresponding plugin defaults to avoid duplicate pages in your navigation.
 
 ```php
 // If you generated only the Terminal page
@@ -130,6 +130,8 @@ WebTerminalPlugin::make()
 WebTerminalPlugin::make()
     ->only([])
 ```
+
+If you don't need the plugin at all (using only custom pages), you can remove `WebTerminalPlugin::make()` from your panel provider entirely.
 
 #### Terminal Command Permissions
 
@@ -151,6 +153,47 @@ php artisan terminal:install --page --allow-no-commands
 | `--allow-secure-commands` (default) | `->allowedCommands([...])` | Safe readonly commands |
 | `--allow-all-commands` | `->allowAllCommands()` | All commands allowed (dangerous) |
 | `--allow-no-commands` | `->allowedCommands([])` | No commands (configure manually) |
+
+#### Create Terminal Page Command
+
+For more control over page generation, use the dedicated `terminal:make-page` command:
+
+```bash
+# Interactive mode - prompts for all options
+php artisan terminal:make-page
+
+# Create a page with a specific name
+php artisan terminal:make-page ServerTerminal
+
+# Specify panel and terminal key
+php artisan terminal:make-page ServerTerminal --panel=admin --key=server-term
+
+# Set command permissions
+php artisan terminal:make-page AdminTerminal --allow-all-commands
+php artisan terminal:make-page ViewerTerminal --allow-no-commands
+
+# Non-interactive with defaults
+php artisan terminal:make-page --no-interaction
+
+# Overwrite existing file
+php artisan terminal:make-page Terminal --force
+```
+
+| Option | Description |
+|--------|-------------|
+| `name` | The page class name (default: `Terminal`) |
+| `--panel=` | The Filament panel to create the page for |
+| `--key=` | The terminal identifier key for logging |
+| `--allow-secure-commands` | Safe readonly commands (default) |
+| `--allow-all-commands` | All commands allowed (dangerous) |
+| `--allow-no-commands` | No commands (configure manually) |
+| `--force` | Overwrite existing file |
+
+**Interactive prompts (when not using `--no-interaction`):**
+1. **Panel selection** - if multiple panels exist
+2. **Page class name** - defaults to "Terminal"
+3. **Terminal key** - auto-generated from name (e.g., `server-terminal-terminal`)
+4. **Command permissions** - secure/none/all options
 
 ### Manual Setup
 

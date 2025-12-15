@@ -4,34 +4,24 @@ declare(strict_types=1);
 
 namespace {{ namespace }};
 
-use BackedEnum;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\Support\Htmlable;
 use MWGuerra\WebTerminal\Filament\Pages\Terminal as BaseTerminal;
 use MWGuerra\WebTerminal\Schemas\Components\WebTerminal;
+use BackedEnum;
+use UnitEnum;
 
-class Terminal extends BaseTerminal
+class {{ class_name }} extends BaseTerminal
 {
-    public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
-    {
-        return 'heroicon-o-command-line';
-    }
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-command-line';
 
-    public static function getNavigationLabel(): string
-    {
-        return __('web-terminal::terminal.navigation.terminal');
-    }
+    protected static ?string $navigationLabel = '{{ navigation_label }}';
 
-    public static function getNavigationGroup(): ?string
-    {
-        return __('web-terminal::terminal.navigation.tools');
-    }
+    protected static string|UnitEnum|null $navigationGroup = 'Tools';
 
-    public static function getNavigationSort(): ?int
-    {
-        return 100;
-    }
+    protected static ?int $navigationSort = 100;
+
+    protected static ?string $slug = '{{ slug }}';
 
     /**
      * Customize the terminal schema.

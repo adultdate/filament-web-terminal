@@ -214,6 +214,23 @@ class TerminalLogger
     }
 
     /**
+     * Log a blocked command event.
+     */
+    public function logBlockedCommand(string $sessionId, string $command, string $reason, array $data = []): ?TerminalLog
+    {
+        // Blocked commands are always logged when logging is enabled (security event)
+        if (! $this->isEnabled()) {
+            return null;
+        }
+
+        $data['terminal_session_id'] = $sessionId;
+        $data['command'] = $command;
+        $data['output'] = $reason;
+
+        return $this->createLog(TerminalLog::EVENT_BLOCKED, $data);
+    }
+
+    /**
      * Create a log entry.
      */
     protected function createLog(string $eventType, array $data): ?TerminalLog

@@ -144,6 +144,7 @@ return [
         'command' => 'Command',
         'output' => 'Output',
         'error' => 'Error',
+        'blocked' => 'Blocked',
     ],
 
     /*

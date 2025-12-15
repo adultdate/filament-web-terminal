@@ -24,7 +24,8 @@ class Terminal extends Page implements HasSchemas
 
     public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
     {
-        return WebTerminalPlugin::current()?->getTerminalNavigationIcon()
+        return static::$navigationIcon
+            ?? WebTerminalPlugin::current()?->getTerminalNavigationIcon()
             ?? 'heroicon-o-command-line';
     }
 
@@ -35,25 +36,28 @@ class Terminal extends Page implements HasSchemas
 
     public static function getNavigationLabel(): string
     {
-        return WebTerminalPlugin::current()?->getTerminalNavigationLabel()
+        return static::$navigationLabel
+            ?? WebTerminalPlugin::current()?->getTerminalNavigationLabel()
             ?? __('web-terminal::terminal.navigation.terminal');
     }
 
     public static function getNavigationSort(): ?int
     {
-        return WebTerminalPlugin::current()?->getTerminalNavigationSort()
+        return static::$navigationSort
+            ?? WebTerminalPlugin::current()?->getTerminalNavigationSort()
             ?? 100;
     }
 
     public static function getNavigationGroup(): ?string
     {
-        return WebTerminalPlugin::current()?->getTerminalNavigationGroup()
+        return static::$navigationGroup
+            ?? WebTerminalPlugin::current()?->getTerminalNavigationGroup()
             ?? __('web-terminal::terminal.navigation.tools');
     }
 
     public static function getSlug(?\Filament\Panel $panel = null): string
     {
-        return 'terminal';
+        return static::$slug ?? 'terminal';
     }
 
     public function schema(Schema $schema): Schema

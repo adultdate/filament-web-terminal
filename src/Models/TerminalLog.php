@@ -60,6 +60,8 @@ class TerminalLog extends Model
 
     public const EVENT_ERROR = 'error';
 
+    public const EVENT_BLOCKED = 'blocked';
+
     /**
      * Connection type constants.
      */
@@ -204,6 +206,7 @@ class TerminalLog extends Model
             self::EVENT_COMMAND => 'info',
             self::EVENT_OUTPUT => 'gray',
             self::EVENT_ERROR => 'danger',
+            self::EVENT_BLOCKED => 'danger',
             default => 'gray',
         };
     }

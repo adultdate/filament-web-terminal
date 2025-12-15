@@ -419,9 +419,12 @@ class WebTerminal extends Component
         $validationResult = $validator->check($command);
 
         if (! $validationResult->valid) {
-            $this->addOutput(TerminalOutput::error(
-                $validationResult->exception?->getUserMessage() ?? 'Command not allowed.'
-            ));
+            $errorMessage = $validationResult->exception?->getUserMessage() ?? 'Command not allowed.';
+
+            $this->addOutput(TerminalOutput::error($errorMessage));
+
+            // Log blocked command (security event)
+            $this->logBlockedCommand($command, $errorMessage);
 
             return;
         }
@@ -723,6 +726,21 @@ class WebTerminal extends Component
         $logger = $this->getLogger();
         $logger->logError($this->terminalSessionId, $error, [
             'command' => $command,
+            'connection_type' => $this->getConnectionTypeForLog(),
+        ]);
+    }
+
+    /**
+     * Log a blocked command attempt (security event).
+     */
+    protected function logBlockedCommand(string $command, string $reason): void
+    {
+        if ($this->terminalSessionId === '') {
+            return;
+        }
+
+        $logger = $this->getLogger();
+        $logger->logBlockedCommand($this->terminalSessionId, $command, $reason, [
             'connection_type' => $this->getConnectionTypeForLog(),
         ]);
     }

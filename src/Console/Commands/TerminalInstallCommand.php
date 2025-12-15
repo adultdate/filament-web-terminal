@@ -482,6 +482,9 @@ class TerminalInstallCommand extends Command
         // Generate from stub
         $content = $this->generateFromStub('terminal-page.php.stub', [
             'namespace' => $namespace,
+            'class_name' => 'Terminal',
+            'navigation_label' => 'Terminal',
+            'slug' => 'terminal',
             'terminal_key' => 'app-terminal',
             'commands_config' => $commandsConfig,
         ]);

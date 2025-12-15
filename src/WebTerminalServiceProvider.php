@@ -11,6 +11,7 @@ use Livewire\Livewire;
 use MWGuerra\WebTerminal\Connections\ConnectionHandlerFactory;
 use MWGuerra\WebTerminal\Console\Commands\TerminalInstallCommand;
 use MWGuerra\WebTerminal\Console\Commands\TerminalLogsCleanupCommand;
+use MWGuerra\WebTerminal\Console\Commands\TerminalMakePageCommand;
 use MWGuerra\WebTerminal\Livewire\WebTerminal;
 use MWGuerra\WebTerminal\Security\CommandSanitizer;
 use MWGuerra\WebTerminal\Security\CommandValidator;
@@ -68,6 +69,7 @@ class WebTerminalServiceProvider extends ServiceProvider
             $this->commands([
                 TerminalInstallCommand::class,
                 TerminalLogsCleanupCommand::class,
+                TerminalMakePageCommand::class,
             ]);
 
             $this->publishes([
