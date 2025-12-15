@@ -64,6 +64,8 @@ class WebTerminal extends Livewire
 
     protected string|Closure|null $logIdentifier = null;
 
+    protected array|Closure $logMetadata = [];
+
     public static function make(Closure|string $component = null, Closure|array $data = []): static
     {
         $static = app(static::class, [
@@ -111,6 +113,7 @@ class WebTerminal extends Livewire
             'logCommands' => $this->getLogCommands(),
             'logOutput' => $this->getLogOutput(),
             'logIdentifier' => $this->getLogIdentifier(),
+            'logMetadata' => $this->getLogMetadata(),
         ];
     }
 
@@ -703,6 +706,38 @@ class WebTerminal extends Livewire
         }
 
         return $this->evaluate($value);
+    }
+
+    /**
+     * Set custom metadata to be included in all log entries for this terminal.
+     *
+     * This metadata is merged with any existing metadata on each log entry,
+     * allowing you to add terminal-specific context like server name, environment,
+     * project ID, or any other custom data useful for filtering and analysis.
+     *
+     * @param  array|Closure  $metadata  Custom metadata key-value pairs
+     *
+     * @example
+     * WebTerminal::make()
+     *     ->logMetadata([
+     *         'server' => 'production-web-1',
+     *         'environment' => 'production',
+     *         'project_id' => 123,
+     *     ])
+     */
+    public function logMetadata(array|Closure $metadata): static
+    {
+        $this->logMetadata = $metadata;
+
+        return $this;
+    }
+
+    /**
+     * Get the custom log metadata.
+     */
+    public function getLogMetadata(): array
+    {
+        return $this->evaluate($this->logMetadata);
     }
 }
 

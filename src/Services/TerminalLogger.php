@@ -132,6 +132,16 @@ class TerminalLogger
     }
 
     /**
+     * Get the base metadata from overrides.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getBaseMetadata(): array
+    {
+        return $this->overrides['metadata'] ?? [];
+    }
+
+    /**
      * Log a connection event.
      */
     public function logConnection(array $data): ?TerminalLog
@@ -239,6 +249,14 @@ class TerminalLogger
             $tenantColumn = $this->config['tenant_column'] ?? null;
             $tenantId = $tenantColumn ? $this->getTenantId() : null;
 
+            // Merge base metadata (from terminal config) with per-call metadata
+            // Per-call metadata takes precedence over base metadata
+            $baseMetadata = $this->getBaseMetadata();
+            $callMetadata = $data['metadata'] ?? [];
+            $mergedMetadata = ! empty($baseMetadata) || ! empty($callMetadata)
+                ? array_merge($baseMetadata, $callMetadata)
+                : null;
+
             $logData = [
                 'user_id' => $data['user_id'] ?? $this->getUserId(),
                 'terminal_session_id' => $data['terminal_session_id'] ?? $this->generateSessionId(),
@@ -254,7 +272,7 @@ class TerminalLogger
                 'execution_time_seconds' => $data['execution_time_seconds'] ?? null,
                 'ip_address' => $data['ip_address'] ?? request()?->ip(),
                 'user_agent' => $data['user_agent'] ?? request()?->userAgent(),
-                'metadata' => $data['metadata'] ?? null,
+                'metadata' => $mergedMetadata,
             ];
 
             if ($tenantColumn && $tenantId !== null) {

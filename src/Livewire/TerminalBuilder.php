@@ -57,6 +57,13 @@ class TerminalBuilder
     protected ?string $key = null;
 
     /**
+     * Custom metadata for logging.
+     *
+     * @var array<string, mixed>
+     */
+    protected array $logMetadata = [];
+
+    /**
      * Set the connection configuration.
      *
      * @param  ConnectionType|string  $type
@@ -225,13 +232,26 @@ class TerminalBuilder
     }
 
     /**
+     * Set custom metadata to be included in all log entries.
+     *
+     * @param  array<string, mixed>  $metadata  Custom metadata key-value pairs
+     * @return $this
+     */
+    public function logMetadata(array $metadata): static
+    {
+        $this->logMetadata = $metadata;
+
+        return $this;
+    }
+
+    /**
      * Get the parameters for the component.
      *
      * @return array<string, mixed>
      */
     public function getParameters(): array
     {
-        return array_filter([
+        $params = array_filter([
             'connection' => $this->connection,
             'allowedCommands' => $this->allowedCommands,
             'timeout' => $this->timeout,
@@ -239,6 +259,13 @@ class TerminalBuilder
             'historyLimit' => $this->historyLimit,
             'maxOutputLines' => $this->maxOutputLines,
         ], fn ($value) => $value !== null);
+
+        // Always include logMetadata if set (even empty array is filtered above)
+        if (! empty($this->logMetadata)) {
+            $params['logMetadata'] = $this->logMetadata;
+        }
+
+        return $params;
     }
 
     /**

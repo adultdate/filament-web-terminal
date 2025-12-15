@@ -229,6 +229,14 @@ class WebTerminal extends Component
     public ?string $logIdentifier = null;
 
     /**
+     * Custom metadata to include in all log entries for this terminal.
+     *
+     * @var array<string, mixed>
+     */
+    #[Locked]
+    public array $logMetadata = [];
+
+    /**
      * Current terminal session ID (generated on connect).
      */
     public string $terminalSessionId = '';
@@ -264,6 +272,7 @@ class WebTerminal extends Component
         ?bool $logCommands = null,
         ?bool $logOutput = null,
         ?string $logIdentifier = null,
+        array $logMetadata = [],
     ): void {
         // Set connection config
         if ($connection instanceof ConnectionConfig) {
@@ -335,6 +344,7 @@ class WebTerminal extends Component
         $this->logCommands = $logCommands;
         $this->logOutput = $logOutput;
         $this->logIdentifier = $logIdentifier;
+        $this->logMetadata = $logMetadata;
 
         // Initialize current directory
         // For remote connections, don't use local getcwd()
@@ -1139,6 +1149,10 @@ class WebTerminal extends Component
 
         if ($this->logIdentifier !== null) {
             $overrides['identifier'] = $this->logIdentifier;
+        }
+
+        if (! empty($this->logMetadata)) {
+            $overrides['metadata'] = $this->logMetadata;
         }
 
         return app(TerminalLogger::class)->withOverrides($overrides);
