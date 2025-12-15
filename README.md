@@ -50,6 +50,75 @@ php artisan terminal:install --no-tenant
 php artisan terminal:install --force
 ```
 
+#### Generate Custom Pages
+
+Generate customizable Terminal page and TerminalLogs resource in your application instead of using the plugin defaults:
+
+```bash
+# Generate a custom Terminal page
+php artisan terminal:install --page
+
+# Generate a custom TerminalLogs resource
+php artisan terminal:install --resource
+
+# Generate both page and resource
+php artisan terminal:install --page --resource
+
+# Generate for a specific panel (multi-panel apps)
+php artisan terminal:install --page --panel=admin
+```
+
+The generated files are placed in directories configured in your panel provider via `->discoverPages()` and `->discoverResources()`. For example:
+
+| Generated File | Location |
+|----------------|----------|
+| Terminal page | `app/Filament/Pages/Terminal.php` |
+| TerminalLogResource | `app/Filament/Resources/TerminalLogResource.php` |
+| ListTerminalLogs | `app/Filament/Resources/TerminalLogResource/Pages/ListTerminalLogs.php` |
+| ViewTerminalLog | `app/Filament/Resources/TerminalLogResource/Pages/ViewTerminalLog.php` |
+
+**Note:** When using custom generated pages with the plugin, disable the corresponding plugin defaults:
+
+```php
+// If you generated only the Terminal page
+WebTerminalPlugin::make()
+    ->withoutTerminalPage()
+
+// If you generated only the TerminalLogs resource
+WebTerminalPlugin::make()
+    ->withoutTerminalLogs()
+
+// If you generated both, disable both plugin defaults
+WebTerminalPlugin::make()
+    ->withoutTerminalPage()
+    ->withoutTerminalLogs()
+
+// Or use only() to keep plugin services without any default pages
+WebTerminalPlugin::make()
+    ->only([])
+```
+
+#### Terminal Command Permissions
+
+When generating a custom Terminal page, you can specify command permissions:
+
+```bash
+# Default - safe readonly commands (ls, pwd, cd, cat, grep, etc.)
+php artisan terminal:install --page --allow-secure-commands
+
+# Allow all commands (dangerous - use with caution)
+php artisan terminal:install --page --allow-all-commands
+
+# No commands - configure manually in the generated file
+php artisan terminal:install --page --allow-no-commands
+```
+
+| Option | Generated Configuration | Description |
+|--------|------------------------|-------------|
+| `--allow-secure-commands` (default) | `->allowedCommands([...])` | Safe readonly commands |
+| `--allow-all-commands` | `->allowAllCommands()` | All commands allowed (dangerous) |
+| `--allow-no-commands` | `->allowedCommands([])` | No commands (configure manually) |
+
 ### Manual Setup
 
 If you prefer manual setup:
@@ -311,20 +380,24 @@ The `config/web-terminal.php` file includes these default allowed commands:
 
 ```php
 'allowed_commands' => [
-    'ls',
+    'ls', 'ls *',
     'pwd',
+    'cd', 'cd *',
+    'uname', 'uname *',
     'whoami',
     'date',
     'uptime',
     'df -h',
     'free -m',
-    'cat',
-    'head',
-    'tail',
-    'wc',
-    'grep',
+    'cat *',
+    'head *',
+    'tail *',
+    'wc *',
+    'grep *',
 ],
 ```
+
+**Note:** The `*` wildcard allows the command with any arguments (e.g., `cd /var/log`, `uname -a`, `grep pattern file.txt`).
 
 ### Plugin Terminal Page Defaults
 
@@ -334,11 +407,14 @@ The Filament plugin's Terminal page (`/admin/terminal`) uses an extended command
 |---------|-------------|
 | `ls`, `ls *` | List directory contents |
 | `pwd` | Print working directory |
+| `cd`, `cd *` | Change directory |
+| `uname`, `uname *` | System information |
 | `whoami` | Display current user |
 | `date` | Show current date/time |
 | `uptime` | System uptime |
 | `cat *`, `head *`, `tail *` | View file contents |
 | `wc *` | Word/line count |
+| `grep *` | Search file contents |
 | `php artisan *` | Laravel Artisan commands |
 | `composer *` | Composer package manager |
 

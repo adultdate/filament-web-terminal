@@ -57,19 +57,22 @@ return [
     */
     'allowed_commands' => [
         'ls',
+        'ls *',
         'pwd',
         'cd',
+        'cd *',
         'uname',
+        'uname *',
         'whoami',
         'date',
         'uptime',
         'df -h',
         'free -m',
-        'cat',
-        'head',
-        'tail',
-        'wc',
-        'grep',
+        'cat *',
+        'head *',
+        'tail *',
+        'wc *',
+        'grep *',
     ],
 
     /*
