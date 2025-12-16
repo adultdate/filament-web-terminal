@@ -718,7 +718,10 @@ class WebTerminal extends Component
 
             // Get connection handler
             $handler = $this->getConnectionHandler();
-            $handler->setWorkingDirectory($this->currentDirectory);
+            // Don't set working directory to '~' - it doesn't expand when quoted in SSH
+            // Let the shell use its default login directory instead
+            $workingDir = ($this->currentDirectory === '~') ? null : $this->currentDirectory;
+            $handler->setWorkingDirectory($workingDir);
 
             // Execute command synchronously
             $result = $handler->execute($command);
@@ -847,7 +850,9 @@ class WebTerminal extends Component
             }
 
             // Execute cd && pwd to change directory and get the new path
-            $handler->setWorkingDirectory($this->currentDirectory);
+            // Don't set working directory to '~' - it doesn't expand when quoted
+            $workingDir = ($this->currentDirectory === '~') ? null : $this->currentDirectory;
+            $handler->setWorkingDirectory($workingDir);
             $result = $handler->execute($cdCommand . ' && pwd');
 
             if ($result->exitCode === 0 && $result->stdout !== '') {
@@ -1473,7 +1478,9 @@ class WebTerminal extends Component
     {
         try {
             $handler = $this->getConnectionHandler();
-            $handler->setWorkingDirectory($this->currentDirectory);
+            // Don't set working directory to '~' - it doesn't expand when quoted
+            $workingDir = ($this->currentDirectory === '~') ? null : $this->currentDirectory;
+            $handler->setWorkingDirectory($workingDir);
 
             // Record where interactive output starts (for full-screen replacement)
             $this->interactiveOutputStart = count($this->output);
