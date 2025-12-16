@@ -164,7 +164,6 @@ class WebTerminal extends Livewire
                 'password' => $config->password,
                 'private_key' => $config->privateKey,
                 'passphrase' => $config->passphrase,
-                'api_token' => $config->apiToken,
                 'port' => $config->port,
                 'timeout' => $config->timeout,
                 'working_directory' => $config->workingDirectory,

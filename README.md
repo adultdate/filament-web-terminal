@@ -2,6 +2,39 @@
 
 A secure web terminal package for Laravel with Filament integration. Execute allowed commands on local systems or SSH servers.
 
+## Table of Contents
+
+- [Installation](#installation)
+  - [Interactive Setup](#interactive-setup)
+  - [Manual Setup](#manual-setup)
+- [Quick Start](#quick-start)
+- [Filament Integration](#filament-integration)
+  - [Register the Plugin](#register-the-plugin)
+  - [Plugin Configuration](#plugin-configuration)
+- [Usage](#usage)
+  - [Direct Livewire Component](#option-1-direct-livewire-component)
+  - [Filament Schema Component](#option-2-filament-schema-component-recommended)
+- [Default Allowed Commands](#default-allowed-commands)
+- [Configuration Options](#configuration-options)
+  - [Dynamic Configuration with Closures](#dynamic-configuration-with-closures)
+  - [Connection Types](#connection-types)
+  - [Terminal Settings](#terminal-settings)
+  - [UI Settings](#ui-settings)
+  - [Session Management](#session-management)
+  - [Environment Helpers](#environment-helpers)
+  - [Preset Configurations](#preset-configurations)
+- [Logging](#logging)
+  - [Configuration](#configuration)
+  - [Fluent API](#fluent-api)
+  - [Querying Logs](#querying-logs)
+  - [Multi-Tenant Support](#multi-tenant-support)
+- [Built-in Commands](#built-in-commands)
+- [Security by Design](#security-by-design)
+- [Events](#events)
+- [Example Use Cases](#example-use-cases)
+- [Localization](#localization)
+- [License](#license)
+
 > **Warning**
 >
 > This package provides real shell access to real servers. Commands executed through this terminal can modify files, change configurations, and affect running services.
@@ -205,6 +238,37 @@ php artisan vendor:publish --tag=web-terminal-config
 
 # Publish views (optional)
 php artisan vendor:publish --tag=web-terminal-views
+```
+
+## Quick Start
+
+Get a working terminal in under a minute:
+
+```php
+// In your Filament PanelProvider
+use MWGuerra\WebTerminal\WebTerminalPlugin;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        ->plugins([
+            WebTerminalPlugin::make(),
+        ]);
+}
+```
+
+That's it! Visit `/admin/terminal` to access the terminal.
+
+For a custom terminal with specific commands:
+
+```php
+use MWGuerra\WebTerminal\Schemas\Components\WebTerminal;
+
+WebTerminal::make()
+    ->local()
+    ->allowedCommands(['ls', 'pwd', 'cd', 'cat', 'git *'])
+    ->workingDirectory(base_path())
+    ->height('400px')
 ```
 
 ## Filament Integration
@@ -665,13 +729,40 @@ WebTerminal::make()
         'port' => 22,
     ])
 
-// Using ConnectionConfig object
+// Using ConnectionConfig object (constructor)
 $config = new ConnectionConfig(
     type: ConnectionType::SSH,
     host: 'server.example.com',
     username: 'deploy',
     password: 'secret',
     port: 22,
+);
+
+WebTerminal::make()->connection($config)
+
+// Using static factory methods (cleaner API)
+use MWGuerra\WebTerminal\Data\ConnectionConfig;
+
+// Local connection
+$config = ConnectionConfig::local(
+    timeout: 30,
+    workingDirectory: base_path(),
+);
+
+// SSH with password
+$config = ConnectionConfig::sshWithPassword(
+    host: 'server.example.com',
+    username: 'deploy',
+    password: 'secret',
+    port: 22,
+);
+
+// SSH with key
+$config = ConnectionConfig::sshWithKey(
+    host: 'server.example.com',
+    username: 'deploy',
+    privateKey: file_get_contents('/path/to/key'),
+    passphrase: 'optional-passphrase',
 );
 
 WebTerminal::make()->connection($config)
@@ -973,6 +1064,7 @@ The logger tracks these event types:
 - `command` - Command executed
 - `output` - Command output (when enabled)
 - `error` - Error occurred
+- `blocked` - Command was blocked by whitelist
 
 ### Session Info Panel
 
