@@ -469,6 +469,204 @@ describe('WebTerminal Component', function () {
     });
 });
 
+describe('session-based connection config', function () {
+    it('generates unique component ID on mount', function () {
+        $component = Livewire::test(WebTerminal::class);
+
+        $componentId = $component->get('componentId');
+
+        expect($componentId)->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i');
+    });
+
+    it('generates different component IDs for different instances', function () {
+        $component1 = Livewire::test(WebTerminal::class);
+        $component2 = Livewire::test(WebTerminal::class);
+
+        expect($component1->get('componentId'))->not->toBe($component2->get('componentId'));
+    });
+
+    it('preserves connection type through getter after mount', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => ['type' => 'local'],
+        ]);
+
+        expect($component->instance()->getConnectionType())->toBe('Local');
+    });
+
+    it('preserves SSH connection config through getter', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'test.example.com',
+                'port' => 2222,
+                'username' => 'testuser',
+            ],
+        ]);
+
+        expect($component->instance()->getConnectionType())->toBe('Ssh');
+        expect($component->instance()->getDisplayHost())->toBe('test.example.com');
+        expect($component->instance()->getDisplayPort())->toBe(2222);
+        expect($component->instance()->getDisplayUsername())->toBe('testuser');
+    });
+});
+
+describe('display getter methods', function () {
+    it('returns null for display host when not configured', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => ['type' => 'local'],
+        ]);
+
+        expect($component->instance()->getDisplayHost())->toBeNull();
+    });
+
+    it('returns configured host for SSH connections', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'server.example.com',
+            ],
+        ]);
+
+        expect($component->instance()->getDisplayHost())->toBe('server.example.com');
+    });
+
+    it('returns default port 22 when not configured', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => ['type' => 'ssh', 'host' => 'test.com'],
+        ]);
+
+        expect($component->instance()->getDisplayPort())->toBe(22);
+    });
+
+    it('returns custom port when configured', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'test.com',
+                'port' => 2222,
+            ],
+        ]);
+
+        expect($component->instance()->getDisplayPort())->toBe(2222);
+    });
+
+    it('returns null for username when not configured', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => ['type' => 'local'],
+        ]);
+
+        expect($component->instance()->getDisplayUsername())->toBeNull();
+    });
+
+    it('returns configured username for SSH', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'test.com',
+                'username' => 'admin',
+            ],
+        ]);
+
+        expect($component->instance()->getDisplayUsername())->toBe('admin');
+    });
+
+    it('returns password auth method when using password', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'test.com',
+                'username' => 'user',
+                'password' => 'secret',
+            ],
+        ]);
+
+        expect($component->instance()->getDisplayAuthMethod())->toBe('password');
+    });
+
+    it('returns key auth method when using private key', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'test.com',
+                'username' => 'user',
+                'private_key' => '-----BEGIN RSA KEY-----',
+            ],
+        ]);
+
+        expect($component->instance()->getDisplayAuthMethod())->toBe('key');
+    });
+
+    it('returns null for working directory when not configured', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => ['type' => 'local'],
+        ]);
+
+        expect($component->instance()->getDisplayWorkingDirectory())->toBeNull();
+    });
+
+    it('returns configured working directory', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'local',
+                'working_directory' => '/var/www/html',
+            ],
+        ]);
+
+        expect($component->instance()->getDisplayWorkingDirectory())->toBe('/var/www/html');
+    });
+});
+
+describe('security', function () {
+    it('does not expose password in public properties', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'test.com',
+                'username' => 'user',
+                'password' => 'supersecret',
+            ],
+        ]);
+
+        // Get the HTML output
+        $html = $component->html();
+
+        // Password should NOT be in the HTML (not even in data attributes or wire:data)
+        expect($html)->not->toContain('supersecret');
+    });
+
+    it('does not expose private key in public properties', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'test.com',
+                'username' => 'user',
+                'private_key' => '-----BEGIN RSA PRIVATE KEY-----SECRETKEY-----END RSA PRIVATE KEY-----',
+            ],
+        ]);
+
+        $html = $component->html();
+
+        expect($html)->not->toContain('-----BEGIN RSA PRIVATE KEY-----');
+        expect($html)->not->toContain('SECRETKEY');
+    });
+
+    it('does not expose passphrase in public properties', function () {
+        $component = Livewire::test(WebTerminal::class, [
+            'connection' => [
+                'type' => 'ssh',
+                'host' => 'test.com',
+                'username' => 'user',
+                'private_key' => '-----BEGIN RSA KEY-----',
+                'passphrase' => 'mypassphrase',
+            ],
+        ]);
+
+        $html = $component->html();
+
+        expect($html)->not->toContain('mypassphrase');
+    });
+});
+
 describe('TerminalBuilder', function () {
     it('creates a builder instance', function () {
         $builder = WebTerminal::make();
