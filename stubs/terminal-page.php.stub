@@ -52,6 +52,7 @@ class {{ class_name }} extends BaseTerminal
                                 enabled: true,
                                 connections: true,
                                 commands: true,
+                                output: true,
                                 identifier: '{{ terminal_key }}',
                             ),
                     ]),
