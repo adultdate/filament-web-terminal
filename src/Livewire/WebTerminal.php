@@ -729,22 +729,20 @@ class WebTerminal extends Component
             // Add output
             $this->addCommandResultOutput($result);
 
-            // Log command execution
+            // Log command execution (including output in same entry)
             if ($this->terminalSessionId !== '') {
                 $logger = $this->getLogger();
+                $outputText = trim($result->stdout . "\n" . $result->stderr);
+
                 $logger->logCommand($this->terminalSessionId, $command, [
                     'connection_type' => $this->getConnectionTypeForLog(),
+                    'host' => $this->connectionConfig['host'] ?? null,
+                    'port' => $this->connectionConfig['port'] ?? null,
+                    'ssh_username' => $this->connectionConfig['username'] ?? null,
                     'exit_code' => $result->exitCode,
                     'execution_time_seconds' => (int) ceil($result->executionTime),
+                    'output' => $outputText !== '' ? $outputText : null,
                 ]);
-
-                // Optionally log output
-                $outputText = trim($result->stdout . "\n" . $result->stderr);
-                if ($outputText !== '') {
-                    $logger->logOutput($this->terminalSessionId, $outputText, [
-                        'connection_type' => $this->getConnectionTypeForLog(),
-                    ]);
-                }
             }
 
             // Dispatch event for auditing
@@ -1594,19 +1592,18 @@ class WebTerminal extends Component
             : 0;
 
         $logger = $this->getLogger();
+        $outputText = $this->extractInteractiveOutputText();
+
+        // Log command with SSH details and output in same entry
         $logger->logCommand($this->terminalSessionId, $this->interactiveCommand, [
             'connection_type' => $this->getConnectionTypeForLog(),
+            'host' => $this->connectionConfig['host'] ?? null,
+            'port' => $this->connectionConfig['port'] ?? null,
+            'ssh_username' => $this->connectionConfig['username'] ?? null,
             'exit_code' => $exitCode,
             'execution_time_seconds' => (int) ceil($executionTime),
+            'output' => $outputText !== '' ? $outputText : null,
         ]);
-
-        // Log output from the interactive session
-        $outputText = $this->extractInteractiveOutputText();
-        if ($outputText !== '') {
-            $logger->logOutput($this->terminalSessionId, $outputText, [
-                'connection_type' => $this->getConnectionTypeForLog(),
-            ]);
-        }
     }
 
     /**

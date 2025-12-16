@@ -173,6 +173,9 @@ class TerminalLogger
 
     /**
      * Log a command execution.
+     *
+     * If 'output' is provided in $data and output logging is enabled,
+     * it will be included in the same log entry (truncated if needed).
      */
     public function logCommand(string $sessionId, string $command, array $data = []): ?TerminalLog
     {
@@ -182,6 +185,22 @@ class TerminalLogger
 
         $data['terminal_session_id'] = $sessionId;
         $data['command'] = $command;
+
+        // Handle output in the same log entry (if provided and output logging enabled)
+        if (isset($data['output']) && $data['output'] !== null) {
+            if ($this->shouldLog('output')) {
+                // Apply truncation to output
+                $maxLength = (int) ($this->config['max_output_length'] ?? 10000);
+                $truncate = (bool) ($this->config['truncate_output'] ?? true);
+
+                if ($truncate && strlen($data['output']) > $maxLength) {
+                    $data['output'] = substr($data['output'], 0, $maxLength) . "\n... [truncated]";
+                }
+            } else {
+                // Output logging disabled, don't include output
+                unset($data['output']);
+            }
+        }
 
         return $this->createLog(TerminalLog::EVENT_COMMAND, $data);
     }
