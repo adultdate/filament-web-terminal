@@ -1,5 +1,5 @@
 {
-    "name": "mwguerra/web-terminal",
+    "name": "adultdate/web-terminal",
     "description": "A web-based terminal component for Filament/Laravel with command whitelisting and multiple connection types",
     "keywords": [
         "laravel",
