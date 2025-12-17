@@ -6,7 +6,6 @@ A secure web terminal package for Laravel with Filament integration. Execute all
 
 - **Connection types**: Local shell execution or SSH connections to remote servers
 - **Command whitelisting**: Configurable allowlist to restrict which commands can be executed
-- **Preset configurations**: Ready-to-use presets for Git, Docker, Node.js, Laravel Artisan, and more
 - **Comprehensive logging**: Audit trail for connections, commands, outputs, and errors
 - **Multi-tenant support**: Built-in tenant isolation for SaaS applications
 - **Session management**: Inactivity timeout, disconnect-on-navigate, and session statistics
