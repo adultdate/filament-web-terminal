@@ -10,4 +10,3 @@ composer.lock
 Thumbs.db
 .taskmanager/
 coverage.txt
-docs/images/
