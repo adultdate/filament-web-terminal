@@ -2,39 +2,6 @@
 
 A secure web terminal package for Laravel with Filament integration. Execute allowed commands on local systems or SSH servers.
 
-## Table of Contents
-
-- [Installation](#installation)
-  - [Interactive Setup](#interactive-setup)
-  - [Manual Setup](#manual-setup)
-- [Quick Start](#quick-start)
-- [Filament Integration](#filament-integration)
-  - [Register the Plugin](#register-the-plugin)
-  - [Plugin Configuration](#plugin-configuration)
-- [Usage](#usage)
-  - [Direct Livewire Component](#option-1-direct-livewire-component)
-  - [Filament Schema Component](#option-2-filament-schema-component-recommended)
-- [Default Allowed Commands](#default-allowed-commands)
-- [Configuration Options](#configuration-options)
-  - [Dynamic Configuration with Closures](#dynamic-configuration-with-closures)
-  - [Connection Types](#connection-types)
-  - [Terminal Settings](#terminal-settings)
-  - [UI Settings](#ui-settings)
-  - [Session Management](#session-management)
-  - [Environment Helpers](#environment-helpers)
-  - [Preset Configurations](#preset-configurations)
-- [Logging](#logging)
-  - [Configuration](#configuration)
-  - [Fluent API](#fluent-api)
-  - [Querying Logs](#querying-logs)
-  - [Multi-Tenant Support](#multi-tenant-support)
-- [Built-in Commands](#built-in-commands)
-- [Security by Design](#security-by-design)
-- [Events](#events)
-- [Example Use Cases](#example-use-cases)
-- [Localization](#localization)
-- [License](#license)
-
 > **Warning**
 >
 > This package provides real shell access to real servers. Commands executed through this terminal can modify files, change configurations, and affect running services.
@@ -1430,6 +1397,19 @@ cp lang/en/terminal.php lang/es/terminal.php
 # Edit lang/es/terminal.php with Spanish translations
 ```
 
+## Issues and Contributing
+
+Found a bug or have a feature request? Please open an issue on [GitHub Issues](https://github.com/mwguerra/web-terminal/issues).
+
+We welcome contributions! Please read our [Contributing Guide](https://github.com/mwguerra/web-terminal/blob/main/CONTRIBUTING.md) before submitting a pull request.
+
 ## License
 
-MIT License
+Web Terminal is open-sourced software licensed under the [MIT License](https://github.com/mwguerra/web-terminal/blob/main/LICENSE).
+
+## Author
+
+### **Marcelo W. Guerra**
+- Website: [mwguerra.com](https://mwguerra.com/)
+- Github: [mwguerra](https://github.com/mwguerra/)
+- Linkedin: [marcelowguerra](https://www.linkedin.com/in/marcelowguerra/)
